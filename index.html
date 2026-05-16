@@ -112,7 +112,16 @@
         .layer-switch button.active { background: #d9a13b; color: #1e2a1c; }
     </style>
     <!-- 百度地图 API 2.0 (稳定版) -->
-    <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=dNhf96bQojXJA6g2MhLrLo99XvxWXqd0"></script>
+    <script>
+  window.baiduMapAK = "dNhf96bQojXJA6g2MhLrLo99XvxWXqd0";  // 这里填你自己的AK
+  function loadBaiduMap() {
+    var script = document.createElement('script');
+    script.src = "https://api.map.baidu.com/api?v=2.0&ak=" + window.baiduMapAK + "&callback=initBaiduMap";
+    document.head.appendChild(script);
+  }
+  window.onload = loadBaiduMap;
+</script>
+
 </head>
 <body>
 <div id="map-container"></div>
