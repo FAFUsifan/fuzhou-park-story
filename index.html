@@ -3,115 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>寻找消失的榕城古渡 · 福州公园时空解谜 (百度地图2.0)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
+    <title>福州公园 · 古渡日记账 | 地图叙事</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; color: #2d3e2b; }
-        #map-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .story-panel {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            background: #1e2a1c;
+        }
+        /* 左右分栏布局 */
+        .journal-container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+        /* 左侧章节面板 (GeoScene 风格) */
+        .entries-panel {
+            width: 360px;
+            background: #fef9e8;
+            border-right: 1px solid #e2dccd;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+            z-index: 2;
+            overflow-y: auto;
+        }
+        .journal-header {
+            padding: 24px 20px 16px;
+            border-bottom: 2px solid #d9a13b;
+            background: #fff7e8;
+        }
+        .journal-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #3a5e2c;
+            letter-spacing: -0.3px;
+        }
+        .journal-header p {
+            font-size: 0.85rem;
+            color: #6f6a55;
+            margin-top: 8px;
+        }
+        .entries-list {
+            flex: 1;
+            padding: 16px 0 24px;
+        }
+        /* 单个章节卡片 */
+        .entry-card {
+            padding: 16px 20px;
+            margin: 0 12px 12px 12px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+        .entry-card.active {
+            border-left-color: #d9a13b;
+            background: #fff9ef;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .entry-card:hover {
+            background: #fff5e6;
+            transform: translateX(2px);
+        }
+        .entry-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #2d4a1e;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .entry-chapter {
+            font-size: 0.7rem;
+            background: #e5e0cf;
+            padding: 2px 8px;
+            border-radius: 30px;
+            color: #6e5c3a;
+        }
+        .entry-time {
+            font-size: 0.7rem;
+            color: #b68b40;
+            margin: 6px 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .entry-summary {
+            font-size: 0.8rem;
+            color: #5b5a4c;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .entry-thumb {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-top: 8px;
+            background: #eae3d2;
+        }
+        /* 右侧地图区域 */
+        .map-area {
+            flex: 1;
+            position: relative;
+            background: #d9e0c9;
+        }
+        #map-container {
+            width: 100%;
+            height: 100%;
+        }
+        /* 右侧浮动详情卡片 (仿 journal 详情) */
+        .detail-card {
             position: absolute;
             bottom: 24px;
             right: 24px;
-            width: 380px;
+            width: 340px;
             max-width: calc(100% - 48px);
-            background: rgba(30, 40, 25, 0.88);
+            background: rgba(30, 35, 22, 0.92);
             backdrop-filter: blur(16px);
-            border-radius: 32px;
-            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.4);
-            padding: 20px;
+            border-radius: 28px;
+            border-left: 5px solid #d9a13b;
+            padding: 18px;
+            color: #fef3da;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
             z-index: 10;
             pointer-events: auto;
-            border-left: 6px solid #d9a13b;
-            color: #f5f2e6;
-            transition: all 0.3s;
+            transition: 0.2s;
         }
-        .story-chapter {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            background: #d9a13b;
-            color: #1e2a1c;
-            padding: 4px 14px;
-            border-radius: 40px;
-            margin-bottom: 12px;
-        }
-        .story-title {
-            font-size: 1.6rem;
+        .detail-title {
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #ffecb3;
         }
-        .story-meta {
+        .detail-meta {
             font-size: 0.7rem;
-            border-left: 3px solid #d9a13b;
-            padding-left: 10px;
-            margin: 8px 0 12px;
             display: flex;
-            flex-wrap: wrap;
             gap: 12px;
+            border-left: 2px solid #d9a13b;
+            padding-left: 10px;
+            margin: 8px 0;
         }
-        .story-desc { font-size: 0.85rem; line-height: 1.45; margin-bottom: 12px; }
-        .park-carousel {
-            margin: 10px 0 12px;
+        .detail-desc {
+            font-size: 0.85rem;
+            line-height: 1.45;
+            margin: 10px 0;
+        }
+        .carousel-container {
+            margin: 12px 0;
             border-radius: 20px;
             overflow: hidden;
-            background: #2c3a24;
+            background: #2a3522;
         }
-        .carousel-inner { position: relative; width: 100%; height: 150px; overflow: hidden; }
-        .carousel-slides { display: flex; transition: transform 0.3s; height: 100%; }
+        .carousel-inner { position: relative; width: 100%; height: 130px; overflow: hidden; }
+        .carousel-slides { display: flex; transition: 0.3s; height: 100%; }
         .carousel-slide { flex: 0 0 100%; height: 100%; }
         .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
         .carousel-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(0,0,0,0.6); color: white; border: none;
-            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); color: white; border: none; width: 26px; height: 26px;
+            border-radius: 50%; cursor: pointer; font-size: 12px;
         }
-        .btn-prev { left: 8px; } .btn-next { right: 8px; }
-        .carousel-dots { display: flex; justify-content: center; gap: 6px; padding: 8px; background: #1e2a1c; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #8faa7b; cursor: pointer; }
-        .dot.active { background: #d9a13b; width: 18px; border-radius: 4px; }
-        .data-chart { background: #2c3a24; border-radius: 20px; padding: 12px; margin: 8px 0; }
-        .chart-label { font-size: 0.7rem; font-weight: 600; color: #d9c48b; margin-bottom: 6px; }
-        .bar-container { display: flex; gap: 12px; flex-wrap: wrap; }
-        .bar-item { flex:1; min-width: 60px; }
-        .bar-bg { background: #4c5e44; border-radius: 20px; height: 8px; overflow: hidden; }
+        .btn-prev { left: 6px; } .btn-next { right: 6px; }
+        .carousel-dots { display: flex; justify-content: center; gap: 5px; padding: 6px; background: #1f2a1a; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; background: #8faa7b; cursor: pointer; }
+        .dot.active { background: #d9a13b; width: 16px; border-radius: 4px; }
+        .data-chart { background: #2a3522; border-radius: 16px; padding: 10px; margin-top: 8px; }
+        .chart-bar-item { display: flex; justify-content: space-between; font-size: 0.7rem; margin: 5px 0; }
+        .bar-bg { background: #4c5e44; border-radius: 12px; height: 6px; overflow: hidden; flex:1; margin:0 8px; }
         .bar-fill { background: #d9a13b; width: 0%; height: 100%; }
-        .stat-value { font-weight: 700; font-size: 0.7rem; margin-top: 4px; color:#e9f0e2; }
-        .story-nav { display: flex; justify-content: space-between; margin-top: 12px; gap: 10px; }
-        .nav-btn {
-            background: rgba(0,0,0,0.6); border: none; color: #ffecb3;
-            padding: 8px 0; border-radius: 40px; font-size: 0.75rem;
-            font-weight: 600; cursor: pointer; flex:1;
-            display: flex; align-items: center; justify-content: center; gap:6px;
-        }
-        .nav-btn:hover { background: #d9a13b; color: #1e2a1c; }
-        .hint-tip {
-            position: absolute; bottom: 28px; left: 24px;
-            background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
-            color: #f0e6c5; padding: 6px 14px; border-radius: 40px;
-            font-size: 0.7rem; z-index: 10; pointer-events: none;
-        }
-        @media (max-width:640px){ .story-panel { width: 280px; padding: 16px; } .carousel-inner { height: 120px; } }
-        .BMap_cpyCtrl, .anchorBL { display: none; }
+        .choice-buttons { display: flex; gap: 12px; margin-top: 12px; }
+        .choice-btn { background: #b8621e; border: none; padding: 6px; border-radius: 30px; flex:1; color: white; cursor: pointer; }
         .layer-switch {
-            position: absolute; top: 20px; right: 20px; z-index: 1000;
-            background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
-            border-radius: 40px; padding: 6px 12px; display: flex; gap: 8px;
+            position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+            border-radius: 40px; padding: 6px 12px; display: flex; gap: 8px; z-index: 20;
         }
-        .layer-switch button {
-            background: #4a5e42; border: none; color: #ffecb3; padding: 6px 16px;
-            border-radius: 30px; cursor: pointer; font-size: 0.75rem; font-weight: 600;
-        }
+        .layer-switch button { background: #4a5e42; border: none; color: #ffecb3; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; }
         .layer-switch button.active { background: #d9a13b; color: #1e2a1c; }
+        .reset-tour { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.6); border: none; color: #ffecb3; padding: 6px 14px; border-radius: 40px; font-size: 0.7rem; cursor: pointer; z-index: 20; display: flex; gap: 8px; }
+        @media (max-width: 800px) {
+            .entries-panel { width: 280px; }
+            .detail-card { width: 260px; padding: 14px; bottom: 16px; right: 16px; }
+            .carousel-inner { height: 100px; }
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #e2dccd; }
+        ::-webkit-scrollbar-thumb { background: #b68b40; }
     </style>
-    <!-- 百度地图 API 2.0 (稳定版) -->
+    <!-- 百度地图 API 2.0 稳定版 -->
     <script>
   window.baiduMapAK = "dNhf96bQojXJA6g2MhLrLo99XvxWXqd0";  // 这里填你自己的AK
   function loadBaiduMap() {
@@ -121,42 +209,52 @@
   }
   window.onload = loadBaiduMap;
 </script>
-
 </head>
 <body>
-<div id="map-container"></div>
-<div class="layer-switch" id="layerSwitch">
-    <button id="switchNormal" class="active">街道图</button>
-    <button id="switchSatellite">卫星图</button>
-</div>
-<div class="story-panel" id="storyPanel">
-    <div class="story-chapter" id="chapterTag">??? · 谜题封印</div>
-    <div class="story-title" id="storyTitle"><i class="fas fa-scroll"></i> 消失的榕城古渡</div>
-    <div class="story-meta" id="storyMeta"><span><i class="far fa-clock"></i> 宋代遗韵</span><span><i class="fas fa-map-pin"></i> 待探索</span></div>
-    <div class="story-desc" id="storyDesc">
-        <strong>“宋元时期，福州城外七座古渡，如今何在？”</strong><br>
-        移动地图，缩放至公园区域，解锁失落的渡口记忆。完成全部线索将揭晓最终答案。
+<div class="journal-container">
+    <!-- 左侧章节列表 -->
+    <div class="entries-panel">
+        <div class="journal-header">
+            <h1><i class="fas fa-scroll"></i> 古渡日记账</h1>
+            <p>宋代七座古渡 · 今日公园遗韵</p>
+        </div>
+        <div class="entries-list" id="entriesList"></div>
     </div>
-    <div id="carouselContainer" class="park-carousel" style="display:none;"></div>
-    <div id="chartContainer" class="data-chart"></div>
-    <div class="story-nav">
-        <button class="nav-btn" id="resetBtn"><i class="fas fa-home"></i> 重置</button>
-        <button class="nav-btn" id="guidedTourBtn"><i class="fas fa-question-circle"></i> 天机指引</button>
+    <!-- 右侧地图区域 -->
+    <div class="map-area">
+        <div id="map-container"></div>
+        <div class="layer-switch">
+            <button id="switchNormal" class="active">街道</button>
+            <button id="switchSatellite">卫星</button>
+        </div>
+        <div class="reset-tour">
+            <button id="resetViewBtn" style="background:transparent; border:none; color:inherit;"><i class="fas fa-home"></i> 重置视角</button>
+            <button id="guidedTourBtn" style="background:transparent; border:none; color:inherit;"><i class="fas fa-route"></i> 天机指引</button>
+        </div>
+        <!-- 右侧详情卡片 (浮动) -->
+        <div class="detail-card" id="detailCard">
+            <div class="detail-title" id="detailTitle">榕城古渡</div>
+            <div class="detail-meta" id="detailMeta"><span>移动地图至公园附近</span></div>
+            <div class="detail-desc" id="detailDesc">缩放或拖动地图，自动解锁古渡篇章。也可点击左侧章节跳转。</div>
+            <div id="carouselWidget" class="carousel-container" style="display:none;"></div>
+            <div id="chartWidget" class="data-chart"></div>
+            <div id="choiceWidget" style="display:none;" class="choice-buttons"></div>
+        </div>
     </div>
 </div>
-<div class="hint-tip"><i class="fas fa-hand-pointer"></i> 缩放/拖动地图 → 破译篇章 · 切换卫星图可解锁密语</div>
 
 <script>
-    // 坐标使用用户提供的百度坐标
+    // 公园数据 (百度坐标)
     const sites = [
-        { id: "westlake", name: "福州西湖公园", lng: 119.295, lat: 26.098, zoomReq: 17,
+        { id: "westlake", name: "福州西湖公园", lng: 119.30, lat: 26.10, zoomReq: 16.5,
           chapter: "古渡· 西湖津", timeText: "宋 · 西北水路要冲", event: "宋代‘西湖渡’为西北粮运码头，如今化为柳堤游廊。",
           desc: "古时西湖与闽江相通，商船溯流而上。如今古榕依旧，渡口石阶早已沉入湖底。",
           multimedia: { featured: "柳堤 · 开化寺", area: "42.5公顷" },
           chartData: { yearBuilt: 282, annualVisitors: 280, greenCover: 78 },
           images: ["images/xihu_1.jpg","images/xihu_2.jpg","images/xihu_3.jpg"],
           clue: "『西湖古渡石兽』",
-          layerRequired: null
+          layerRequired: null,
+          summary: "晋代开凿，千年园林之母。"
         },
         { id: "minjiang", name: "闽江公园", lng: 119.27, lat: 26.07, zoomReq: 16,
           chapter: "古渡· 苍霞渡", timeText: "宋 · 南台繁华码头", event: "宋代‘苍霞渡’是福州对内贸易中心，今为江滨休闲带。",
@@ -165,18 +263,20 @@
           chartData: { yearBuilt: 2000, annualVisitors: 420, greenCover: 85 },
           images: ["images/minjiang_1.jpg","images/minjiang_2.jpg","images/minjiang_3.jpg"],
           clue: "『苍霞渡石碑残片』",
-          layerRequired: "satellite"
+          layerRequired: "satellite",
+          summary: "江岸新绿，古渡新生。"
         },
-        { id: "forestpark", name: "福州国家森林公园", lng: 119.29, lat: 26.17, zoomReq: 17,
+        { id: "forestpark", name: "福州国家森林公园", lng: 119.2797, lat: 26.1556, zoomReq: 16.5,
           chapter: "古渡· 屏山渡", timeText: "宋 · 山麓溪渡", event: "宋代‘屏山渡’连接北岭与城区，今为森林秘境。",
           desc: "千年古榕王见证了渡口兴衰，山涧曾行小舟。",
           multimedia: { featured: "千年榕树王 · 森林博物馆", area: "859公顷" },
           chartData: { yearBuilt: 1960, annualVisitors: 155, greenCover: 95 },
           images: ["images/senlin_1.jpg","images/senlin_2.jpg","images/senlin_3.jpg"],
           clue: "『古渡拴船石』",
-          layerRequired: null
+          layerRequired: null,
+          summary: "天然氧吧，古木参天。"
         },
-        { id: "fudao", name: "金牛山 · 福道公园", lng: 119.27, lat: 26.09, zoomReq: 18,
+        { id: "fudao", name: "金牛山 · 福道公园", lng: 119.27, lat: 26.09, zoomReq: 17,
           chapter: "抉择 · 分水岭", timeText: "抉择之地", event: "向左沿江，向右登山，不同路径引向不同渡口遗址结局。",
           desc: "此处为古渡分支：北往洪山渡，南往帮洲渡。",
           multimedia: { featured: "钢结构栈道 · 杜鹃谷", area: "连接5园" },
@@ -184,7 +284,8 @@
           images: ["images/fudao_1.jpg","images/fudao_2.jpg","images/fudao_3.jpg"],
           clue: null,
           layerRequired: null,
-          isChoice: true
+          isChoice: true,
+          summary: "空中步道，抉择岔路。"
         },
         { id: "huahai", name: "花海公园", lng: 119.37, lat: 26.04, zoomReq: 16,
           chapter: "古渡· 雁塔渡", timeText: "宋 · 闽东水路", event: "宋代‘雁塔渡’是东南官渡，今为四季花海。",
@@ -193,130 +294,138 @@
           chartData: { yearBuilt: 2013, annualVisitors: 320, greenCover: 82 },
           images: ["images/huahai_1.jpg","images/huahai_2.jpg","images/huahai_3.jpg"],
           clue: "『雁塔古渡瓷片』",
-          layerRequired: null
+          layerRequired: null,
+          summary: "四时花海，诗意收官。"
         }
     ];
 
+    // 全局变量
     let map = null;
     let currentLayer = "normal";
     let unlockedSites = [false, false, false, false, false];
     let choiceMade = false;
     let finalUnlocked = false;
-    let currentActiveIndex = -1;
-    let tourActive = false;
-    let tourTimer = null;
-    let overlays = [];       // 存储自定义覆盖物（用于清除）
-    let markers = [];        // 存储标记点（用于清除）
+    let activeIndex = -1;
+    let tourActive = false, tourTimer = null;
+    let overlays = [], markers = [];
+    let currentCarousel = null;
 
-    // 等待百度地图2.0加载完成
-    window.initBaiduMap = function() {
-        map = new BMap.Map("map-container");
-        const center = new BMap.Point(119.285, 26.085);
-        map.centerAndZoom(center, 13);
-        map.enableScrollWheelZoom(true);
-        map.enableDragging();
-        map.addControl(new BMap.NavigationControl());
-        map.addControl(new BMap.ScaleControl());
-        
-        map.addEventListener("moveend", detectAndUnlock);
-        map.addEventListener("zoomend", detectAndUnlock);
-        
-        drawRouteAndMarkers();
-        setTimeout(detectAndUnlock, 800);
-    };
-    
-    function clearOverlays() {
-        overlays.forEach(overlay => {
-            if (overlay instanceof BMap.Polyline) map.removeOverlay(overlay);
-            else if (overlay instanceof BMap.Marker) map.removeOverlay(overlay);
-            else if (overlay instanceof BMap.Circle) map.removeOverlay(overlay);
-        });
-        overlays = [];
-        markers.forEach(m => map.removeOverlay(m));
-        markers = [];
-    }
-    
-    function drawRouteAndMarkers() {
-        clearOverlays();
-        const points = sites.map(s => new BMap.Point(s.lng, s.lat));
-        
-        // 虚线路径
-        const polyline = new BMap.Polyline(points, {
-            strokeColor: "#d9a13b",
-            strokeWeight: 3,
-            strokeOpacity: 0.8,
-            strokeStyle: "dashed"
-        });
-        map.addOverlay(polyline);
-        overlays.push(polyline);
-        
-        // 方向点：在线段中点添加小圆点（样式不依赖外部图片）
-        for (let i = 0; i < points.length - 1; i++) {
-            const p1 = points[i];
-            const p2 = points[i+1];
-            const midLng = (p1.lng + p2.lng) / 2;
-            const midLat = (p1.lat + p2.lat) / 2;
-            const circleMarker = new BMap.Marker(new BMap.Point(midLng, midLat), {
-                icon: new BMap.Icon(
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='4' fill='%23d9a13b' /%3E%3C/svg%3E",
-                    new BMap.Size(10, 10),
-                    { anchor: new BMap.Size(5, 5) }
-                )
+    // 左侧章节渲染
+    function renderEntries() {
+        const container = document.getElementById('entriesList');
+        container.innerHTML = '';
+        sites.forEach((site, idx) => {
+            const card = document.createElement('div');
+            card.className = 'entry-card';
+            card.dataset.idx = idx;
+            card.innerHTML = `
+                <div class="entry-title">
+                    <span>${site.name}</span>
+                    <span class="entry-chapter">${site.chapter}</span>
+                </div>
+                <div class="entry-time"><i class="far fa-clock"></i> ${site.timeText}</div>
+                <div class="entry-summary">${site.summary || site.event.substring(0, 40)}…</div>
+                <img class="entry-thumb" src="${site.images[0]}" onerror="this.src='https://placehold.co/600x400/4a5e42/d9c48b?text=预览图'">
+            `;
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activateChapter(idx, true);
             });
-            map.addOverlay(circleMarker);
-            overlays.push(circleMarker);
-        }
-        
-        // 起点终点标记（使用简单文本避免黑块）
-        const startPoint = points[0];
-        const startMarker = new BMap.Marker(startPoint, {
-            icon: new BMap.Icon(
-                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='2' y='20' font-size='20' fill='%23d9a13b'%3E▶%3C/text%3E%3C/svg%3E",
-                new BMap.Size(24, 24),
-                { anchor: new BMap.Size(12, 12) }
-            )
+            container.appendChild(card);
         });
-        map.addOverlay(startMarker);
-        overlays.push(startMarker);
-        
-        const endPoint = points[points.length-1];
-        const endMarker = new BMap.Marker(endPoint, {
-            icon: new BMap.Icon(
-                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='2' y='20' font-size='20' fill='%23d9a13b'%3E🏁%3C/text%3E%3C/svg%3E",
-                new BMap.Size(24, 24),
-                { anchor: new BMap.Size(12, 12) }
-            )
-        });
-        map.addOverlay(endMarker);
-        overlays.push(endMarker);
-        
-        // 添加圆形触发区和普通标记点（使用默认红色气泡，稳定可靠）
-        sites.forEach(site => {
+    }
+
+    // 激活某个章节
+    function activateChapter(index, flyToMap = true) {
+        if (index < 0 || index >= sites.length) return;
+        const site = sites[index];
+        if (flyToMap) {
             const point = new BMap.Point(site.lng, site.lat);
-            // 圆形触发区
-            const circle = new BMap.Circle(point, 450, {
-                strokeColor: "#bf8f3f",
-                strokeWeight: 1,
-                fillColor: "#d9a13b",
-                fillOpacity: 0.1
-            });
-            map.addOverlay(circle);
-            overlays.push(circle);
-            // 默认红色气泡标记（百度地图原生，绝不会黑块）
-            const marker = new BMap.Marker(point);
-            map.addOverlay(marker);
-            markers.push(marker);
-            marker.addEventListener("click", () => {
-                map.centerAndZoom(point, site.zoomReq);
-            });
+            map.centerAndZoom(point, site.zoomReq);
+        }
+        // 高亮左侧卡片
+        document.querySelectorAll('.entry-card').forEach((card, i) => {
+            if (i == index) card.classList.add('active');
+            else card.classList.remove('active');
         });
+        // 更新右侧详情卡片
+        updateDetailPanel(index);
+        activeIndex = index;
+        // 如果未解锁但满足条件，尝试解锁（触发解锁逻辑）
+        if (!unlockedSites[index]) {
+            attemptUnlock(index);
+        }
     }
-    
-    // 轮播组件
-    function buildCarousel(images, containerId) {
-        const container = document.getElementById(containerId);
+
+    // 尝试解锁（考虑图层限制）
+    function attemptUnlock(index, forced=false) {
+        if (unlockedSites[index]) return true;
+        const site = sites[index];
+        if (site.layerRequired && currentLayer !== site.layerRequired && !forced) {
+            document.getElementById('detailDesc').innerHTML = `<strong>⚠️ 封印未解</strong><br>需要「卫星图」图层才能显现古渡记忆。请点击右上角切换。`;
+            return false;
+        }
+        unlockedSites[index] = true;
+        // 重新渲染左侧小锁标记 (装饰)
+        const card = document.querySelector(`.entry-card[data-idx="${index}"]`);
+        if (card) card.style.borderLeftColor = '#d9a13b';
+        // 更新右侧完整信息（带线索）
+        updateDetailPanel(index);
+        // 弹窗提示
+        const point = new BMap.Point(site.lng, site.lat);
+        const info = new BMap.InfoWindow(`✨ 解锁：${site.chapter}`, { width: 150 });
+        map.openInfoWindow(info, point);
+        setTimeout(() => map.closeInfoWindow(), 1800);
+        return true;
+    }
+
+    // 更新右侧浮窗 (带轮播、图表)
+    function updateDetailPanel(index) {
+        const site = sites[index];
+        const unlocked = unlockedSites[index];
+        document.getElementById('detailTitle').innerHTML = `<i class="fas fa-landmark"></i> ${site.name}`;
+        document.getElementById('detailMeta').innerHTML = `<span><i class="far fa-calendar-alt"></i> ${site.timeText}</span><span><i class="fas fa-map-pin"></i> ${site.name}</span>`;
+        let descText = `<strong>${site.event}</strong><br>${site.desc}`;
+        if (unlocked && site.clue) descText += `<br><span style="background:#7a551a; padding:2px 8px; border-radius:20px;">🏮 线索：${site.clue}</span>`;
+        if (!unlocked) descText = `<strong>❓ 未解之谜</strong><br>请缩放地图至合适级别并移动至公园区域。${site.layerRequired ? ' 需切换卫星图。' : ''}`;
+        document.getElementById('detailDesc').innerHTML = descText;
+
+        // 轮播图
+        const carouselDiv = document.getElementById('carouselWidget');
+        if (unlocked && site.images && site.images.length) {
+            buildCarousel(site.images, carouselDiv);
+        } else {
+            carouselDiv.style.display = 'none';
+        }
+        // 图表
+        const chartDiv = document.getElementById('chartWidget');
+        if (unlocked && site.chartData) {
+            const cd = site.chartData;
+            chartDiv.innerHTML = `
+                <div class="chart-label" style="color:#d9c48b;">📊 渡口生态数据</div>
+                <div class="chart-bar-item"><span>建成年份</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.min((cd.yearBuilt-200)/20,100)}%"></div></div><span>${cd.yearBuilt}</span></div>
+                <div class="chart-bar-item"><span>年游客(万)</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(cd.annualVisitors/5,100)}%"></div></div><span>${cd.annualVisitors}</span></div>
+                <div class="chart-bar-item"><span>绿化率%</span><div class="bar-bg"><div class="bar-fill" style="width:${cd.greenCover}%"></div></div><span>${cd.greenCover}</span></div>
+                <div style="font-size:0.7rem; text-align:center; margin-top:6px;">${site.multimedia.featured} | ${site.multimedia.area}</div>
+            `;
+        } else {
+            chartDiv.innerHTML = `<div style="text-align:center;"><i class="fas fa-lock"></i> 接近并解锁后可见详细数据</div>`;
+        }
+        // 抉择按钮
+        const choiceWidget = document.getElementById('choiceWidget');
+        if (unlocked && site.isChoice && !choiceMade) {
+            choiceWidget.style.display = 'flex';
+            choiceWidget.innerHTML = `<button class="choice-btn" id="choiceLeft">⛰️ 登高望远</button><button class="choice-btn" id="choiceRight">🌊 沿江寻踪</button>`;
+            document.getElementById('choiceLeft').onclick = () => makeChoice('mountain');
+            document.getElementById('choiceRight').onclick = () => makeChoice('river');
+        } else {
+            choiceWidget.style.display = 'none';
+        }
+    }
+
+    function buildCarousel(images, container) {
         if (!container) return;
-        if (!images || images.length === 0) { container.style.display = 'none'; return; }
+        if (!images || images.length===0) { container.style.display='none'; return; }
         container.style.display = 'block';
         container.innerHTML = `
             <div class="carousel-inner">
@@ -342,115 +451,89 @@
         container.querySelector('.btn-next').onclick = () => goToSlide(currentIdx+1);
         update();
     }
-    
-    function unlockSite(index, forced=false) {
-        if (unlockedSites[index]) return;
-        const site = sites[index];
-        if (site.layerRequired && currentLayer !== site.layerRequired && !forced) {
-            document.getElementById('storyDesc').innerHTML = `<strong>⚠️ 封印未解 ⚠️</strong><br>此地的古渡记忆需要「卫星图」图层才能显现。请点击右上角「卫星图」切换。`;
-            document.getElementById('storyPanel').style.borderLeftColor = '#ff7744';
-            setTimeout(()=>{ if(!unlockedSites[index]) document.getElementById('storyPanel').style.borderLeftColor = '#d9a13b'; }, 1500);
-            return;
-        }
-        unlockedSites[index] = true;
-        document.getElementById('chapterTag').innerText = site.chapter;
-        document.getElementById('storyTitle').innerHTML = `<i class="fas fa-landmark"></i> ${site.name}`;
-        document.getElementById('storyMeta').innerHTML = `<span><i class="far fa-calendar-alt"></i> ${site.timeText}</span><span><i class="fas fa-map-pin"></i> ${site.name}</span>`;
-        let descText = `<strong>${site.event}</strong><br>${site.desc}`;
-        if (site.clue) descText += `<br><span style="background:#7a551a; padding:2px 8px; border-radius:20px;">🏮 获得线索：${site.clue}</span>`;
-        if (site.isChoice && !choiceMade) {
-            descText += `<br><div style="display:flex; gap:10px; margin-top:12px;"><button id="choiceLeft" style="background:#b8621e; border:none; padding:6px; border-radius:30px; flex:1;">⛰️ 登高望远</button><button id="choiceRight" style="background:#b8621e; border:none; padding:6px; border-radius:30px; flex:1;">🌊 沿江寻踪</button></div>`;
-        }
-        document.getElementById('storyDesc').innerHTML = descText;
-        if (site.images) buildCarousel(site.images, 'carouselContainer');
-        else document.getElementById('carouselContainer').style.display = 'none';
-        const cd = site.chartData;
-        document.getElementById('chartContainer').innerHTML = `
-            <div class="chart-label">📊 渡口生态数据</div>
-            <div class="bar-container">
-                <div class="bar-item"><div>建成年份</div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min((cd.yearBuilt-200)/20,100)}%"></div></div><div class="stat-value">${cd.yearBuilt}</div></div>
-                <div class="bar-item"><div>年游客(万)</div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(cd.annualVisitors/5,100)}%"></div></div><div class="stat-value">${cd.annualVisitors}</div></div>
-                <div class="bar-item"><div>绿化率%</div><div class="bar-bg"><div class="bar-fill" style="width:${cd.greenCover}%"></div></div><div class="stat-value">${cd.greenCover}</div></div>
-            </div>
-            <div style="text-align:center;font-size:0.7rem;margin-top:6px;">${site.multimedia.featured} | ${site.multimedia.area}</div>
-        `;
-        if (site.isChoice && !choiceMade) {
-            const leftBtn = document.getElementById('choiceLeft');
-            const rightBtn = document.getElementById('choiceRight');
-            if (leftBtn) leftBtn.onclick = () => makeChoice('mountain');
-            if (rightBtn) rightBtn.onclick = () => makeChoice('river');
-        }
-        const point = new BMap.Point(site.lng, site.lat);
-        const infoWindow = new BMap.InfoWindow(`✨ 解锁：${site.chapter}`, { width: 150 });
-        map.openInfoWindow(infoWindow, point);
-        setTimeout(() => map.closeInfoWindow(), 2000);
-    }
-    
+
     function makeChoice(direction) {
         if (choiceMade) return;
         choiceMade = true;
-        let endingMsg = "";
-        if (direction === 'mountain') {
-            endingMsg = "你选择了登山，发现洪山古渡遗迹，当年的拴船石仍立于悬崖。最终你集齐四块令牌，遥望闽江，感叹沧海桑田。";
-        } else {
-            endingMsg = "你选择了沿江，找到了帮洲古渡遗址，江岸石阶犹存。集齐四块令牌，完成渡口群像拼图。";
-        }
+        let endingMsg = direction === 'mountain' ? "登高望远，发现洪山古渡遗迹。" : "沿江寻踪，找到帮洲古渡遗址。";
         finalUnlocked = true;
-        document.getElementById('storyDesc').innerHTML += `<br><div style="background:#2c5f2d; border-radius:20px; padding:10px; margin-top:10px;"><i class="fas fa-fist-raised"></i> 结局 · ${endingMsg}<br>🎋 福州古渡与公园的时光对话至此圆满。</div>`;
-        if (!unlockedSites[4]) unlockSite(4, true);
+        document.getElementById('detailDesc').innerHTML += `<br><div style="background:#2c5f2d; border-radius:16px; padding:8px; margin-top:8px;">🎋 结局：${endingMsg} 集齐古渡记忆，福州公园之旅圆满。</div>`;
+        if (!unlockedSites[4]) attemptUnlock(4, true);
     }
-    
-    function detectAndUnlock() {
+
+    // 地图初始化 & 绘制路径
+    function initMap() {
+        map = new BMap.Map("map-container");
+        const center = new BMap.Point(119.285, 26.085);
+        map.centerAndZoom(center, 13);
+        map.enableScrollWheelZoom(true);
+        map.enableDragging();
+        map.addControl(new BMap.NavigationControl());
+        map.addControl(new BMap.ScaleControl());
+        // 虚线路径
+        const points = sites.map(s => new BMap.Point(s.lng, s.lat));
+        const polyline = new BMap.Polyline(points, { strokeColor: "#d9a13b", strokeWeight: 3, strokeStyle: "dashed", strokeOpacity: 0.8 });
+        map.addOverlay(polyline);
+        overlays.push(polyline);
+        // 方向点
+        for (let i=0; i<points.length-1; i++) {
+            const mid = new BMap.Point((points[i].lng+points[i+1].lng)/2, (points[i].lat+points[i+1].lat)/2);
+            const marker = new BMap.Marker(mid, { icon: new BMap.Icon("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='4' fill='%23d9a13b'/%3E%3C/svg%3E", new BMap.Size(8,8)) });
+            map.addOverlay(marker);
+            overlays.push(marker);
+        }
+        // 圆形触发区 和 红色标记
+        sites.forEach(site => {
+            const point = new BMap.Point(site.lng, site.lat);
+            const circle = new BMap.Circle(point, 450, { strokeColor: "#bf8f3f", strokeWeight: 1, fillColor: "#d9a13b", fillOpacity: 0.1 });
+            map.addOverlay(circle);
+            overlays.push(circle);
+            const marker = new BMap.Marker(point);
+            map.addOverlay(marker);
+            markers.push(marker);
+        });
+        // 起点终点
+        const startIcon = new BMap.Icon("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='2' y='20' font-size='18' fill='%23d9a13b'%3E▶%3C/text%3E%3C/svg%3E", new BMap.Size(20,20));
+        const endIcon = new BMap.Icon("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='2' y='20' font-size='18' fill='%23d9a13b'%3E🏁%3C/text%3E%3C/svg%3E", new BMap.Size(20,20));
+        const startM = new BMap.Marker(points[0], { icon: startIcon });
+        const endM = new BMap.Marker(points[points.length-1], { icon: endIcon });
+        map.addOverlay(startM); overlays.push(startM);
+        map.addOverlay(endM); overlays.push(endM);
+
+        // 地图移动监听
+        map.addEventListener("moveend", detectNearest);
+        map.addEventListener("zoomend", detectNearest);
+        setTimeout(detectNearest, 500);
+    }
+
+    function detectNearest() {
         const center = map.getCenter();
         const zoom = map.getZoom();
-        let nearest = -1;
-        let minDist = 800;
+        let best = -1, bestDist = 800;
         for (let i=0; i<sites.length; i++) {
             const s = sites[i];
-            const point = new BMap.Point(s.lng, s.lat);
-            const dist = map.getDistance(center, point);
+            const dist = map.getDistance(center, new BMap.Point(s.lng, s.lat));
             if (zoom >= s.zoomReq && dist < 700) {
-                if (nearest === -1 || dist < minDist) {
-                    nearest = i;
-                    minDist = dist;
-                }
+                if (best === -1 || dist < bestDist) { best = i; bestDist = dist; }
             }
         }
-        if (nearest !== -1 && !unlockedSites[nearest]) {
-            unlockSite(nearest);
-            currentActiveIndex = nearest;
-        } else if (nearest !== -1 && unlockedSites[nearest] && currentActiveIndex !== nearest) {
-            const site = sites[nearest];
-            document.getElementById('chapterTag').innerText = site.chapter;
-            document.getElementById('storyTitle').innerHTML = `<i class="fas fa-landmark"></i> ${site.name}`;
-            document.getElementById('storyMeta').innerHTML = `<span><i class="far fa-calendar-alt"></i> ${site.timeText}</span><span><i class="fas fa-map-pin"></i> ${site.name}</span>`;
-            let descText = `<strong>${site.event}</strong><br>${site.desc}`;
-            if (site.clue && !site.isChoice) descText += `<br><span style="background:#7a551a; padding:2px 8px; border-radius:20px;">🏮 线索：${site.clue}</span>`;
-            if (site.isChoice && !choiceMade) descText += `<br><div style="display:flex; gap:10px; margin-top:12px;"><button id="choiceLeft" style="background:#b8621e; border:none; padding:6px; border-radius:30px; flex:1;">⛰️ 登高望远</button><button id="choiceRight" style="background:#b8621e; border:none; padding:6px; border-radius:30px; flex:1;">🌊 沿江寻踪</button></div>`;
-            document.getElementById('storyDesc').innerHTML = descText;
-            if (site.images) buildCarousel(site.images, 'carouselContainer');
-            if (site.isChoice && !choiceMade) {
-                const leftBtn = document.getElementById('choiceLeft');
-                const rightBtn = document.getElementById('choiceRight');
-                if (leftBtn) leftBtn.onclick = () => makeChoice('mountain');
-                if (rightBtn) rightBtn.onclick = () => makeChoice('river');
-            }
-            currentActiveIndex = nearest;
-        }
-        else if (nearest === -1 && !finalUnlocked) {
-            if (currentActiveIndex !== -999) {
-                document.getElementById('chapterTag').innerText = "🏯 未解之谜";
-                document.getElementById('storyTitle').innerHTML = `<i class="fas fa-scroll"></i> 消失的榕城古渡`;
-                document.getElementById('storyMeta').innerHTML = `<span>已解锁: ${unlockedSites.filter(v=>v===true).length}/5</span><span>移动地图至标记点附近缩放解锁</span>`;
-                document.getElementById('storyDesc').innerHTML = `宋代福州七座古渡，如今大多变成公园。请移动地图，放大至每个公园区域（圆圈内），并按要求切换图层，逐一揭开渡口记忆。虚线为探索路线。`;
-                document.getElementById('carouselContainer').style.display = 'none';
-                document.getElementById('chartContainer').innerHTML = `<div style="text-align:center;"><i class="fas fa-map-marked-alt"></i> 缩放地图至任一公园，开始你的考古之旅。</div>`;
-                currentActiveIndex = -999;
+        if (best !== -1) {
+            if (!unlockedSites[best]) attemptUnlock(best);
+            if (activeIndex !== best) activateChapter(best, false);
+        } else if (best === -1 && !finalUnlocked) {
+            // 全局视图
+            if (activeIndex !== -999) {
+                document.getElementById('detailTitle').innerHTML = '<i class="fas fa-scroll"></i> 古渡谜图';
+                document.getElementById('detailMeta').innerHTML = '<span>缩放/移动地图至公园区域</span>';
+                document.getElementById('detailDesc').innerHTML = '移动地图并缩放至圆形标记内，解锁每座公园的古渡记忆。左侧章节可点击快速跳转。';
+                document.getElementById('carouselWidget').style.display = 'none';
+                document.getElementById('chartWidget').innerHTML = '<div style="text-align:center;">📌 靠近任一公园，故事自动展开</div>';
+                activeIndex = -999;
             }
         }
     }
-    
-    // 图层切换（百度地图2.0 稳定版）
+
+    // 图层切换
     function setLayer(type) {
         if (type === 'satellite') {
             map.setMapType(BMAP_SATELLITE_MAP);
@@ -459,81 +542,52 @@
             map.setMapType(BMAP_NORMAL_MAP);
             currentLayer = "normal";
         }
-        const normalBtn = document.getElementById('switchNormal');
-        const satBtn = document.getElementById('switchSatellite');
-        if (type === 'satellite') {
-            satBtn.classList.add('active');
-            normalBtn.classList.remove('active');
-        } else {
-            normalBtn.classList.add('active');
-            satBtn.classList.remove('active');
-        }
-        // 重新检测当前区域（尤其闽江公园需要卫星图）
-        setTimeout(detectAndUnlock, 500);
+        document.getElementById('switchNormal').classList.toggle('active', type === 'normal');
+        document.getElementById('switchSatellite').classList.toggle('active', type === 'satellite');
+        setTimeout(detectNearest, 400);
     }
-    
-    // 天机指引自动导览
+
+    // 天机指引 (自动导览)
     function startGuide() {
-        if (tourActive) {
-            if (tourTimer) clearTimeout(tourTimer);
-            tourActive = false;
-            document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-question-circle"></i> 天机指引';
-            return;
-        }
+        if (tourActive) { if(tourTimer) clearTimeout(tourTimer); tourActive=false; return; }
         tourActive = true;
-        const order = [0,1,2,3,4];
         let step = 0;
-        document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-hourglass-half"></i> 导览中...';
+        const order = [0,1,2,3,4];
         function next() {
-            if (!tourActive || step >= order.length) {
-                tourActive = false;
-                document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-question-circle"></i> 天机指引';
-                return;
-            }
+            if (!tourActive || step >= order.length) { tourActive=false; return; }
             const idx = order[step];
             const target = sites[idx];
-            const point = new BMap.Point(target.lng, target.lat);
-            map.centerAndZoom(point, target.zoomReq);
-            const onMoveEnd = () => {
-                map.removeEventListener("moveend", onMoveEnd);
+            map.centerAndZoom(new BMap.Point(target.lng, target.lat), target.zoomReq);
+            const handler = () => {
+                map.removeEventListener("moveend", handler);
                 if (tourActive) {
                     if (target.layerRequired && currentLayer !== target.layerRequired) {
-                        document.getElementById('storyDesc').innerHTML = `<strong>⚠️ 请手动切换至「卫星图」图层 ⚠️</strong><br>点击右上角「卫星图」按钮以继续解谜。`;
+                        document.getElementById('detailDesc').innerHTML = `<strong>⚠️ 请手动切换至「卫星图」</strong>`;
                     } else {
-                        detectAndUnlock();
+                        attemptUnlock(idx);
+                        activateChapter(idx, false);
                     }
                     step++;
-                    tourTimer = setTimeout(next, 5000);
+                    tourTimer = setTimeout(next, 4800);
                 }
             };
-            map.addEventListener("moveend", onMoveEnd);
-            tourTimer = setTimeout(() => {
-                map.removeEventListener("moveend", onMoveEnd);
-                if (tourActive) next();
-            }, 6000);
+            map.addEventListener("moveend", handler);
+            tourTimer = setTimeout(() => { map.removeEventListener("moveend", handler); if(tourActive) next(); }, 5500);
         }
         next();
     }
-    
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        if (confirm('重置所有进度，重新开始解谜？')) {
-            unlockedSites = [false, false, false, false, false];
-            choiceMade = false;
-            finalUnlocked = false;
-            currentActiveIndex = -1;
-            if (tourActive) {
-                if (tourTimer) clearTimeout(tourTimer);
-                tourActive = false;
-                document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-question-circle"></i> 天机指引';
-            }
-            map.centerAndZoom(new BMap.Point(119.285, 26.085), 13);
-            setTimeout(() => detectAndUnlock(), 500);
-        }
-    });
-    document.getElementById('guidedTourBtn').addEventListener('click', startGuide);
-    document.getElementById('switchNormal').addEventListener('click', () => setLayer('normal'));
-    document.getElementById('switchSatellite').addEventListener('click', () => setLayer('satellite'));
-    
+
+    // 重置视角
+    function resetView() { map.centerAndZoom(new BMap.Point(119.285, 26.085), 13); }
+
+    window.initBaiduMap = function() {
+        initMap();
+        renderEntries();
+        document.getElementById('switchNormal').onclick = () => setLayer('normal');
+        document.getElementById('switchSatellite').onclick = () => setLayer('satellite');
+        document.getElementById('resetViewBtn').onclick = resetView;
+        document.getElementById('guidedTourBtn').onclick = startGuide;
+    };
     window.initBaiduMap();
 </script>
 </body>
