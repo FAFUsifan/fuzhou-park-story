@@ -218,16 +218,32 @@
             display: flex; align-items: center; gap: 5px;
         }
         .reset-tour button:hover { color: #e6863a; }
+        .toast-message {
+            position: fixed;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fef3da;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+        }
         @media (max-width: 800px) {
             .entries-panel { width: 280px; }
             .detail-card { width: 260px; padding: 16px; bottom: 16px; right: 16px; }
             .carousel-inner { height: 100px; }
+            .toast-message { font-size: 0.7rem; white-space: normal; width: 80%; text-align: center; }
         }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #e9e0d4; }
         ::-webkit-scrollbar-thumb { background: #bf8f64; border-radius: 10px; }
     </style>
-   <script>
+    <script>
   window.baiduMapAK = "dNhf96bQojXJA6g2MhLrLo99XvxWXqd0";  // 这里填你自己的AK
   function loadBaiduMap() {
     var script = document.createElement('script');
@@ -314,7 +330,7 @@
         { id: "huahai", name: "花海公园", lng: 119.37, lat: 26.04, zoomReq: 16,
           chapter: "雁塔渡", timeText: "宋 · 闽东水路", event: "宋代‘雁塔渡’是东南官渡，今为四季花海。",
           desc: "古渡石阶已没于滩涂，花海之下埋藏船运记忆。",
-          multimedia: { featured: "波斯菊海 · 湿地观鸟", area: "65公顷" },
+          multimedia: { featured: "小苍兰花海 · 湿地观鸟", area: "65公顷" },
           chartData: { yearBuilt: 2013, annualVisitors: 320, greenCover: 82 },
           images: ["images/huahai_1.jpg","images/huahai_2.jpg","images/huahai_3.jpg"],
           clue: "雁塔古渡瓷片",
@@ -327,10 +343,12 @@
     let currentLayer = "normal";
     let unlockedSites = [false, false, false, false, false];
     let choiceMade = false;
-    let endingText = "";          // 存储结局文本
+    let endingText = "";
     let finalUnlocked = false;
     let activeIndex = -1;
-    let tourActive = false, tourTimer = null;
+    let tourActive = false;
+    let tourTimer = null;
+    let tourStep = 0;
     let overlays = [], markers = [];
 
     // 渲染左侧章节列表
@@ -358,7 +376,6 @@
         });
     }
 
-    // 激活章节
     function activateChapter(index, flyToMap = true) {
         if (index < 0 || index >= sites.length) return;
         const site = sites[index];
@@ -398,8 +415,6 @@
         let descText = `<strong>${site.event}</strong><br>${site.desc}`;
         if (unlocked && site.clue) descText += `<br><span style="background:#804e26; padding:2px 10px; border-radius:20px; display:inline-block; margin-top:6px;">线索：${site.clue}</span>`;
         if (!unlocked) descText = `<strong>未解之谜</strong><br>请缩放并移动至公园区域。${site.layerRequired ? ' 需切换卫星图层。' : ''}`;
-        
-        // 如果已经做出选择并且当前是福道公园，显示结局
         if (choiceMade && site.id === 'fudao' && endingText) {
             descText += `<div class="ending-message">${endingText}</div>`;
         }
@@ -425,7 +440,6 @@
             chartDiv.innerHTML = `<div style="text-align:center;"><i class="fas fa-lock"></i> 靠近解锁后可见数据</div>`;
         }
         const choiceWidget = document.getElementById('choiceWidget');
-        // 只有福道公园且未做出选择时才显示按钮
         if (unlocked && site.isChoice && !choiceMade) {
             choiceWidget.style.display = 'flex';
             choiceWidget.innerHTML = `<button class="choice-btn" id="choiceLeft">登高望远</button><button class="choice-btn" id="choiceRight">沿江寻踪</button>`;
@@ -473,20 +487,113 @@
         } else {
             endingText = "沿江寻踪，找到帮洲古渡遗址，江岸石阶犹存。集齐四块令牌，完成渡口群像拼图。";
         }
-        // 更新当前福道公园的面板以显示结局
-        if (activeIndex === 3) { // 福道索引为3
+        if (activeIndex === 3) {
             updateDetailPanel(3);
         }
-        // 可选：弹出一个提示，但不要强制跳转到花海
         const point = new BMap.Point(sites[3].lng, sites[3].lat);
         const info = new BMap.InfoWindow(`抉择已定：${direction === 'mountain' ? '登高' : '沿江'}，古渡故事圆满。`, { width: 180 });
         map.openInfoWindow(info, point);
         setTimeout(() => map.closeInfoWindow(), 2500);
-        // 不再强制跳转花海，但可以标记结局已完成
         finalUnlocked = true;
     }
 
-    // 地图初始化
+    // 显示临时提示
+    function showToast(message, duration = 2000) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, duration);
+    }
+
+    // 修复后的天机指引
+    function startGuide() {
+        if (tourActive) {
+            // 如果已经在导览中，则停止
+            if (tourTimer) clearInterval(tourTimer);
+            tourActive = false;
+            document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-compass"></i> 天机指引';
+            showToast('已停止自动阅览', 1500);
+            return;
+        }
+        // 开始导览
+        tourActive = true;
+        document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-pause"></i> 停止阅览';
+        showToast('正在自动阅览，每5秒跳转下一公园', 2500);
+        
+        const order = [0, 1, 2, 3, 4];
+        let currentStep = 0;
+        
+        // 先跳转到第一个公园
+        function goToStep(step) {
+            if (!tourActive) return;
+            if (step >= order.length) {
+                // 导览结束
+                tourActive = false;
+                document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-compass"></i> 天机指引';
+                showToast('天机指引阅览完毕', 2000);
+                return;
+            }
+            const idx = order[step];
+            const target = sites[idx];
+            const point = new BMap.Point(target.lng, target.lat);
+            map.centerAndZoom(point, target.zoomReq);
+            // 同时激活该章节（但不自动解锁，保留原有逻辑，只是让右侧面板更新）
+            activateChapter(idx, false);
+        }
+        
+        // 开始第一步
+        goToStep(currentStep);
+        // 设置定时器，每5秒下一步
+        tourTimer = setInterval(() => {
+            if (!tourActive) {
+                clearInterval(tourTimer);
+                return;
+            }
+            currentStep++;
+            if (currentStep >= order.length) {
+                clearInterval(tourTimer);
+                tourActive = false;
+                document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-compass"></i> 天机指引';
+                showToast('天机指引阅览完毕', 2000);
+            } else {
+                goToStep(currentStep);
+            }
+        }, 5000);
+        
+        // 监听用户主动交互，一旦用户拖动或缩放，立即停止自动导览
+        const stopOnUserAction = () => {
+            if (tourActive) {
+                clearInterval(tourTimer);
+                tourActive = false;
+                document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-compass"></i> 天机指引';
+                showToast('检测到手动操作，自动阅览已停止', 1500);
+                // 移除监听
+                map.removeEventListener("movestart", stopOnUserAction);
+                map.removeEventListener("zoomstart", stopOnUserAction);
+            }
+        };
+        map.addEventListener("movestart", stopOnUserAction);
+        map.addEventListener("zoomstart", stopOnUserAction);
+        // 同时存储停止函数以便重置时移除
+        window._guideStopHandler = stopOnUserAction;
+    }
+
+    // 重置视角并停止导览
+    function resetView() {
+        if (tourActive) {
+            clearInterval(tourTimer);
+            tourActive = false;
+            document.getElementById('guidedTourBtn').innerHTML = '<i class="fas fa-compass"></i> 天机指引';
+            if (window._guideStopHandler) {
+                map.removeEventListener("movestart", window._guideStopHandler);
+                map.removeEventListener("zoomstart", window._guideStopHandler);
+            }
+        }
+        map.centerAndZoom(new BMap.Point(119.285, 26.085), 13);
+    }
+
+    // 地图初始化 (与之前相同，略作修改确保 removeEventListener 不报错)
     function initMap() {
         map = new BMap.Map("map-container");
         const center = new BMap.Point(119.285, 26.085);
@@ -565,37 +672,6 @@
         document.getElementById('switchSatellite').classList.toggle('active', type === 'satellite');
         setTimeout(detectNearest, 400);
     }
-
-    function startGuide() {
-        if (tourActive) { if (tourTimer) clearTimeout(tourTimer); tourActive = false; return; }
-        tourActive = true;
-        let step = 0;
-        const order = [0, 1, 2, 3, 4];
-        function next() {
-            if (!tourActive || step >= order.length) { tourActive = false; return; }
-            const idx = order[step];
-            const target = sites[idx];
-            map.centerAndZoom(new BMap.Point(target.lng, target.lat), target.zoomReq);
-            const handler = () => {
-                map.removeEventListener("moveend", handler);
-                if (tourActive) {
-                    if (target.layerRequired && currentLayer !== target.layerRequired) {
-                        document.getElementById('detailDesc').innerHTML = `<strong>需要卫星图</strong><br>请点击右上角切换至卫星图。`;
-                    } else {
-                        attemptUnlock(idx);
-                        activateChapter(idx, false);
-                    }
-                    step++;
-                    tourTimer = setTimeout(next, 4800);
-                }
-            };
-            map.addEventListener("moveend", handler);
-            tourTimer = setTimeout(() => { map.removeEventListener("moveend", handler); if (tourActive) next(); }, 5500);
-        }
-        next();
-    }
-
-    function resetView() { map.centerAndZoom(new BMap.Point(119.285, 26.085), 13); }
 
     window.initBaiduMap = function () {
         initMap();
